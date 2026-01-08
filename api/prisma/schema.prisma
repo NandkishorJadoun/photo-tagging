@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Character {
+  name String @unique
+  x    Float  @default(0)
+  y    Float  @default(0)
+
+  @@map("characters")
+}
+
+model GameSession {
+  id          String    @id @default(uuid())
+  startTime   DateTime  @default(now())
+  endTime     DateTime?
+  foundWaldo  Boolean   @default(false)
+  foundOdlaw  Boolean   @default(false)
+  foundWizard Boolean   @default(false)
+
+  @@map("gameSessions")
+}
+
+model LeaderboardEntry {
+  id       String @unique @default(uuid())
+  userName String
+  duration Int
+
+  @@map("leaderboardEntries")
+}
