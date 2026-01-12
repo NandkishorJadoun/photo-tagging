@@ -16,12 +16,10 @@ model Character {
 }
 
 model GameSession {
-  id          String    @id @default(uuid())
-  startTime   DateTime  @default(now())
-  endTime     DateTime?
-  foundWaldo  Boolean   @default(false)
-  foundOdlaw  Boolean   @default(false)
-  foundWizard Boolean   @default(false)
+  id              String    @id @default(uuid())
+  startTime       DateTime  @default(now())
+  endTime         DateTime?
+  foundCharacters String[]  @default([])
 
   @@map("gameSessions")
 }
