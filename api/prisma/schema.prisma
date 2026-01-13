@@ -8,20 +8,20 @@ datasource db {
 }
 
 model Character {
-  name String @unique
-  x    Float  @default(0)
-  y    Float  @default(0)
+  name          String       @unique
+  x             Float        @default(0)
+  y             Float        @default(0)
 
   @@map("characters")
 }
 
 model GameSession {
-  id              String    @id @default(uuid())
-  startTime       DateTime  @default(now())
-  endTime         DateTime?
-  foundCharacters String[]  @default([])
+  id         String      @id @default(uuid())
+  startTime  DateTime    @default(now())
+  endTime    DateTime?
+  characters String[]
 
-  @@map("gameSessions")
+  @@map("game_sessions")
 }
 
 model LeaderboardEntry {
@@ -29,5 +29,5 @@ model LeaderboardEntry {
   userName String
   duration Int
 
-  @@map("leaderboardEntries")
+  @@map("leaderboard_entries")
 }
