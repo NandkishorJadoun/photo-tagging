@@ -1,25 +1,49 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import styles from "../assets/css/AppLayout.module.css";
-import { useLoaderData, useActionData, Form } from "react-router";
+import { useActionData, Form } from "react-router";
+import type { MouseEventHandler } from "react";
+import puzzleImgSrc from "/pic.jpg";
+import { useGameSession } from "../hooks/useGameSession.js";
 
 function GameBoard() {
   const resultData = useActionData();
-  const imageSrc = useLoaderData();
-  const imgRef = useRef();
 
+  const imgRef = useRef<HTMLImageElement>(null);
   const [isClicked, setIsClicked] = useState(false);
+
+  // TODO: Make the bottom state a single object
+
   const [left, setLeft] = useState(0);
   const [top, setTop] = useState(0);
-  const [imgDimension, setImgDimension] = useState({ x: 0, y: 0 });
-  const charName = ["Waldo", "Odlaw", "Wizard"];
 
-  const handleClick = (event) => {
+  const [imgDimension, setImgDimension] = useState({ x: 0, y: 0 });
+
+  interface CharacterInfo {
+    name: string;
+    found: boolean;
+  }
+
+  const [charStatus, SetCharStatus] = useState<CharacterInfo[]>([]);
+
+  const [gameId] = useGameSession();
+
+  useEffect(() => {
+    if (resultData && resultData.characters) {
+      SetCharStatus(resultData.characters);
+    }
+  }, [resultData]);
+
+  const charName = charStatus
+    .filter((char) => !char.found)
+    .map((char) => char.name);
+
+  const handleClick: MouseEventHandler<HTMLImageElement> = (event) => {
     if (isClicked) {
       setIsClicked(false);
       return;
     }
 
-    const img = imgRef.current;
+    const img = imgRef.current!;
     const rect = img.getBoundingClientRect();
 
     const clicked = {
@@ -36,7 +60,7 @@ function GameBoard() {
   return (
     <main>
       <div className={styles.main}>
-        <img src={imageSrc} onClick={handleClick} ref={imgRef} />
+        <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
         <div>
           <div
             className={`${styles.box} ${isClicked ? "" : styles.hidden}`}
@@ -57,6 +81,8 @@ function GameBoard() {
                 clickY={Math.round((top / imgDimension.y) * 100) / 100}
                 clickX={Math.round((left / imgDimension.x) * 100) / 100}
                 character={char}
+                id={gameId}
+                setIsClicked={setIsClicked}
               />
             ))}
           </div>
@@ -67,12 +93,13 @@ function GameBoard() {
   );
 }
 
-function ButtonForm({ clickX, clickY, character }) {
+function ButtonForm({ clickX, clickY, character, id, setIsClicked }: any) {
   return (
-    <Form action="/game" method="post">
+    <Form onSubmit={() => setIsClicked(false)} action="/game" method="post">
       <input type="hidden" name="clickX" value={clickX} />
       <input type="hidden" name="clickY" value={clickY} />
-      <input type="hidden" name="character" value={character.toLowerCase()} />
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="character" value={character} />
       <button type="submit">{character}</button>
     </Form>
   );

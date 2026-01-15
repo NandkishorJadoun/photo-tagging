@@ -1,10 +1,9 @@
-import { AppLayout } from "./AppLayout";
-import HomePage from "./components/HomePage";
-import GameBoard from "./components/GameBoard";
-import LeaderBoard from "./components/LeaderBoard";
+import { AppLayout } from "./components/AppLayout.js";
+import HomePage from "./components/HomePage.js";
+import GameBoard from "./components/GameBoard.js";
+import LeaderBoard from "./components/LeaderBoard.js";
 
-import { imageLoader } from "./assets/js/loader";
-import { gameAction } from "./assets/js/action";
+import { gameAction } from "./assets/js/action.js";
 
 export const routes = [
   {
@@ -18,7 +17,6 @@ export const routes = [
       {
         path: "game",
         Component: GameBoard,
-        loader: imageLoader,
         action: gameAction,
       },
       {

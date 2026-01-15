@@ -1,10 +1,13 @@
-export const gameAction = async ({ request }) => {
+import type { ActionFunction } from "react-router";
+
+export const gameAction: ActionFunction = async ({ request }) => {
   const data = await request.formData();
 
   const submissions = {
     character: data.get("character"),
     clickX: data.get("clickX"),
     clickY: data.get("clickY"),
+    id: data.get("id"),
   };
 
   console.log(submissions);

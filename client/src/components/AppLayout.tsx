@@ -1,12 +1,6 @@
-
 import { Link, Outlet } from "react-router";
 
-
-
-
-
 export function AppLayout() {
-  
   return (
     <>
       <header>
@@ -14,8 +8,6 @@ export function AppLayout() {
       </header>
 
       <Outlet />
-
-      
     </>
   );
 }
