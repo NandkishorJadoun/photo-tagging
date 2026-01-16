@@ -1,0 +1,55 @@
+import { redirect, type ActionFunction } from "react-router";
+
+export const gameAction: ActionFunction = async ({ request }) => {
+  const data = await request.formData();
+
+  const submissions = {
+    character: data.get("character"),
+    clickX: data.get("clickX"),
+    clickY: data.get("clickY"),
+    id: data.get("id"),
+  };
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/game/play`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submissions),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    return error.info;
+  }
+
+  return response.json();
+};
+
+export const leaderboardAction: ActionFunction = async ({ request }) => {
+  const data = await request.formData();
+
+  const submissions = {
+    username: data.get("username"),
+    gameId: data.get("gameId")
+  }
+
+  console.log("submissions:", submissions)
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/game/end`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submissions),
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    return error.info;
+  }
+
+  redirect("/leaderboard")
+}

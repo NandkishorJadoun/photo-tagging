@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import styles from "../assets/css/AppLayout.module.css";
 import { useActionData, Form } from "react-router";
 import type { MouseEventHandler } from "react";
@@ -12,10 +12,12 @@ const initCharStatus = [
 ];
 
 function GameBoard() {
+  const [gameId] = useGameSession();
   const resultData = useActionData();
   const [charStatus, SetCharStatus] = useState(initCharStatus);
-  const [gameId] = useGameSession();
+  const [isGameOver, setIsGameOver] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const [menuPosition, setMenuPosition] = useState<{
     x: number;
@@ -25,18 +27,26 @@ function GameBoard() {
   } | null>(null);
 
   useEffect(() => {
-    if (resultData && resultData.characters) {
-      SetCharStatus(resultData.characters);
+    if (resultData?.characterStatus) {
+      SetCharStatus(resultData.characterStatus);
+      setIsGameOver(resultData.isGameOver);
     }
   }, [resultData]);
+
+  useLayoutEffect(() => {
+    if (isGameOver) {
+      dialogRef.current?.showModal();
+    }
+  }, [isGameOver]);
 
   const charName = charStatus
     .filter((char) => !char.found)
     .map((char) => char.name);
 
   const handleClick: MouseEventHandler<HTMLImageElement> = (event) => {
-    const img = imgRef.current!;
-    const rect = img.getBoundingClientRect();
+    const rect = imgRef.current?.getBoundingClientRect();
+
+    if (!rect) return;
 
     setMenuPosition({
       x: event.clientX - rect.left,
@@ -56,38 +66,36 @@ function GameBoard() {
     <main>
       <div className={styles.main}>
         <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
-        <div>
-          {menuPosition && (
-            <div
-              className={styles.box}
-              style={{
-                top: menuPosition.y - (menuPosition.h * 1.5) / 200,
-                left: menuPosition.x - (menuPosition.w * 1.5) / 200,
-                width: (menuPosition.w * 3) / 200,
-                height: (menuPosition.h * 3) / 200,
-              }}
-            />
-          )}
-          {menuPosition && (
-            <div
-              className={styles.dropdown}
-              style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
-            >
-              {charName.map((character) => (
-                <ButtonForm
-                  key={character}
-                  clickX={clickX}
-                  clickY={clickY}
-                  character={character}
-                  id={gameId}
-                  closeMenu={() => setMenuPosition(null)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {menuPosition && (
+          <div
+            className={styles.dropdown}
+            style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
+          >
+            {charName.map((character) => (
+              <ButtonForm
+                key={character}
+                clickX={clickX}
+                clickY={clickY}
+                character={character}
+                id={gameId}
+                closeMenu={() => setMenuPosition(null)}
+              />
+            ))}
+          </div>
+        )}
       </div>
       <div>Result: {resultData && resultData.message}</div>
+
+      <dialog ref={dialogRef}>
+        <Form action="/leaderboard" method="post">
+          <div>
+            <label htmlFor="username">Your Name: </label>
+            <input type="text" name="username" id="username" required />
+          </div>
+          <input type="hidden" name="gameId" value={gameId} />
+          <button type="submit">Submit</button>
+        </Form>
+      </dialog>
     </main>
   );
 }
