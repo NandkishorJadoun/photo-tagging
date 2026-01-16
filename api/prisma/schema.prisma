@@ -27,7 +27,7 @@ model GameSession {
 
 model LeaderboardEntry {
   id            String      @unique @default(uuid())
-  userName      String
+  userName      String      @default("User")
   session       GameSession @relation(fields: [gameSessionId], references: [id])
   gameSessionId String
   duration      Int

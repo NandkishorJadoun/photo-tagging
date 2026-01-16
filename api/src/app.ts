@@ -65,4 +65,33 @@ app.post("/api/game/play", async (req, res) => {
   });
 });
 
+app.post("/api/game/end", async (req, res) => {
+  const { username, gameId } = req.body
 
+  const gameSession = await prisma.gameSession.findUnique({
+    where: { id: gameId }
+  })
+
+  if (!gameSession || !gameSession.endTime) {
+    return res.status(404).json({ message: "No Game data found or game not finished" })
+  }
+
+  const duration = gameSession.endTime.getTime() - gameSession.startTime.getTime();
+
+  await prisma.leaderboardEntry.create({
+    data: {
+      userName: username,
+      session: {
+        connect: { id: gameId }
+      },
+      duration
+    }
+  })
+
+  return res.json({ message: "User added in leaderboard successfully" })
+})
+
+app.get("/api/leaderboard", async (req, res) => {
+  const leaderboard = await prisma.leaderboardEntry.findMany({ where: {} })
+  return res.status(200).json({ message: "Get leaderboard successfully", leaderboard })
+})
