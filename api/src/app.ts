@@ -10,25 +10,12 @@ app.use(cors());
 app.use(json());
 app.use(urlencoded({ extended: false }));
 
-app.get("/api/game", (req, res) => {
-  res.json({
-    message: "Image sent successfully",
-    data: process.env.IMAGE_URL,
-  });
-});
-
 app.post("/api/game/start", async (req, res) => {
   const session = await prisma.gameSession.create({ data: {} });
-  const allCharacters = await prisma.character.findMany();
-  const characterStatus = allCharacters.map((char) => ({
-    name: char.name,
-    found: false,
-  }));
 
   res.json({
     message: "Game Started",
     sessionId: session.id,
-    characters: characterStatus,
   });
 });
 

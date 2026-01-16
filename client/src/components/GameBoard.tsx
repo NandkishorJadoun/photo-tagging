@@ -5,27 +5,24 @@ import type { MouseEventHandler } from "react";
 import puzzleImgSrc from "/pic.jpg";
 import { useGameSession } from "../hooks/useGameSession.js";
 
+const initCharStatus = [
+  { name: "waldo", found: false },
+  { name: "odlaw", found: false },
+  { name: "wizard", found: false },
+];
+
 function GameBoard() {
   const resultData = useActionData();
-
-  const imgRef = useRef<HTMLImageElement>(null);
-  const [isClicked, setIsClicked] = useState(false);
-
-  // TODO: Make the bottom state a single object
-
-  const [left, setLeft] = useState(0);
-  const [top, setTop] = useState(0);
-
-  const [imgDimension, setImgDimension] = useState({ x: 0, y: 0 });
-
-  interface CharacterInfo {
-    name: string;
-    found: boolean;
-  }
-
-  const [charStatus, SetCharStatus] = useState<CharacterInfo[]>([]);
-
+  const [charStatus, SetCharStatus] = useState(initCharStatus);
   const [gameId] = useGameSession();
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  const [menuPosition, setMenuPosition] = useState<{
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  } | null>(null);
 
   useEffect(() => {
     if (resultData && resultData.characters) {
@@ -38,54 +35,56 @@ function GameBoard() {
     .map((char) => char.name);
 
   const handleClick: MouseEventHandler<HTMLImageElement> = (event) => {
-    if (isClicked) {
-      setIsClicked(false);
-      return;
-    }
-
     const img = imgRef.current!;
     const rect = img.getBoundingClientRect();
 
-    const clicked = {
+    setMenuPosition({
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
-    };
-
-    setIsClicked(true);
-    setLeft(clicked.x);
-    setTop(clicked.y);
-    setImgDimension({ ...imgDimension, x: rect.width, y: rect.height });
+      w: rect.width,
+      h: rect.height,
+    });
   };
+
+  const clickY =
+    menuPosition && Math.round((menuPosition.y / menuPosition.h) * 100) / 100;
+
+  const clickX =
+    menuPosition && Math.round((menuPosition.x / menuPosition.w) * 100) / 100;
 
   return (
     <main>
       <div className={styles.main}>
         <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
         <div>
-          <div
-            className={`${styles.box} ${isClicked ? "" : styles.hidden}`}
-            style={{
-              top: top - (imgDimension.y * 1.5) / 200,
-              left: left - (imgDimension.x * 1.5) / 200,
-              width: (imgDimension.x * 3) / 200,
-              height: (imgDimension.y * 3) / 200,
-            }}
-          />
-          <div
-            className={`${styles.dropdown} ${isClicked ? "" : styles.hidden}`}
-            style={{ top: top + 10, left: left + 10 }}
-          >
-            {charName.map((char) => (
-              <ButtonForm
-                key={char}
-                clickY={Math.round((top / imgDimension.y) * 100) / 100}
-                clickX={Math.round((left / imgDimension.x) * 100) / 100}
-                character={char}
-                id={gameId}
-                setIsClicked={setIsClicked}
-              />
-            ))}
-          </div>
+          {menuPosition && (
+            <div
+              className={styles.box}
+              style={{
+                top: menuPosition.y - (menuPosition.h * 1.5) / 200,
+                left: menuPosition.x - (menuPosition.w * 1.5) / 200,
+                width: (menuPosition.w * 3) / 200,
+                height: (menuPosition.h * 3) / 200,
+              }}
+            />
+          )}
+          {menuPosition && (
+            <div
+              className={styles.dropdown}
+              style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
+            >
+              {charName.map((character) => (
+                <ButtonForm
+                  key={character}
+                  clickX={clickX}
+                  clickY={clickY}
+                  character={character}
+                  id={gameId}
+                  closeMenu={() => setMenuPosition(null)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div>Result: {resultData && resultData.message}</div>
@@ -93,9 +92,9 @@ function GameBoard() {
   );
 }
 
-function ButtonForm({ clickX, clickY, character, id, setIsClicked }: any) {
+function ButtonForm({ clickX, clickY, character, id, closeMenu }: any) {
   return (
-    <Form onSubmit={() => setIsClicked(false)} action="/game" method="post">
+    <Form onSubmit={closeMenu} action="/game" method="post">
       <input type="hidden" name="clickX" value={clickX} />
       <input type="hidden" name="clickY" value={clickY} />
       <input type="hidden" name="id" value={id} />
