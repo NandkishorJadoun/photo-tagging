@@ -27,35 +27,42 @@ app.post("/api/game/play", async (req, res) => {
   });
 
   if (!characterData) {
-    // fix it with try catch i guess
-    return null
+    return res.status(404).json({ message: "Character not found" });
   }
 
   const isFound = isWithinTolerance(clickX, clickY, characterData);
 
-  if (isFound) {
-    const updatedSession = await prisma.gameSession.update({
-      where: { id },
-      data: {
-        characters: { push: character },
-      },
-    });
-
-    const allCharacters = await prisma.character.findMany();
-
-    const characterStatus = allCharacters.map((char) => ({
-      name: char.name,
-      found: updatedSession.characters.includes(char.name),
-    }));
-
-    return res.json({
-      message: `Found ${character}`,
-      characters: characterStatus,
-      gameover: updatedSession.characters.length === allCharacters.length,
-    });
+  if (!isFound) {
+    return res.status(200).json({ message: "Try again!" });
   }
 
-  res.status(200).json({ message: "Try again!" });
+  const [allCharacters, updatedSession] = await prisma.$transaction([
+    prisma.character.findMany(),
+    prisma.gameSession.update({
+      where: { id },
+      data: { characters: { push: character } },
+    })
+  ])
+
+  const characterStatus = allCharacters.map((char) => ({
+    name: char.name,
+    found: updatedSession.characters.includes(char.name),
+  }));
+
+  const isGameOver = allCharacters.every(char =>
+    updatedSession.characters.includes(char.name)
+  );
+
+  if (isGameOver) {
+    await prisma.gameSession.update({
+      where: { id },
+      data: { endTime: new Date() }
+    })
+  }
+
+  return res.json({
+    message: `Found ${character}`, characterStatus, isGameOver,
+  });
 });
 
 

@@ -8,26 +8,29 @@ datasource db {
 }
 
 model Character {
-  name          String       @unique
-  x             Float        @default(0)
-  y             Float        @default(0)
+  name String @unique
+  x    Float  @default(0)
+  y    Float  @default(0)
 
   @@map("characters")
 }
 
 model GameSession {
-  id         String      @id @default(uuid())
-  startTime  DateTime    @default(now())
-  endTime    DateTime?
-  characters String[]
+  id                 String             @id @default(uuid())
+  startTime          DateTime           @default(now())
+  endTime            DateTime?
+  characters         String[]
+  leaderboardEntries LeaderboardEntry[]
 
   @@map("game_sessions")
 }
 
 model LeaderboardEntry {
-  id       String @unique @default(uuid())
-  userName String
-  duration Int
+  id            String      @unique @default(uuid())
+  userName      String
+  session       GameSession @relation(fields: [gameSessionId], references: [id])
+  gameSessionId String
+  duration      Int
 
   @@map("leaderboard_entries")
 }
