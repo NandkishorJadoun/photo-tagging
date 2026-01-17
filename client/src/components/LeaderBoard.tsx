@@ -4,9 +4,24 @@ function LeaderBoard() {
   const [leaderboard, error, loading] = useFetchLeaderboard();
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  if (error) return <div>Some error...</div>;
+  if (!leaderboard) return <div>No Data found...</div>;
 
-  return <main>{JSON.stringify(leaderboard)}</main>;
+  return (
+    <main>
+      <h1>LeaderBoard</h1>
+      <div>
+        {leaderboard.map((entry) => {
+          return (
+            <div key={entry.id}>
+              <p>{entry.userName}</p>
+              <p>{entry.duration} ms</p>
+            </div>
+          );
+        })}
+      </div>
+    </main>
+  );
 }
 
 export default LeaderBoard;
