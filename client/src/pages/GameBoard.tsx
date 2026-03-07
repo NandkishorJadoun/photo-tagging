@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
-import styles from "../assets/css/AppLayout.module.css";
 import { useActionData, Form } from "react-router";
 import type { MouseEventHandler } from "react";
 import puzzleImgSrc from "/pic.jpg";
 import { useGameSession } from "../hooks/useGameSession.js";
 
+import { Header } from "../components/Header.js";
 const initCharStatus = [
   { name: "waldo", found: false },
   { name: "odlaw", found: false },
@@ -63,40 +63,42 @@ function GameBoard() {
     menuPosition && Math.round((menuPosition.x / menuPosition.w) * 100) / 100;
 
   return (
-    <main>
-      <div className={styles.main}>
-        <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
-        {menuPosition && (
-          <div
-            className={styles.dropdown}
-            style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
-          >
-            {charName.map((character) => (
-              <ButtonForm
-                key={character}
-                clickX={clickX}
-                clickY={clickY}
-                character={character}
-                id={gameId}
-                closeMenu={() => setMenuPosition(null)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      <div>Result: {resultData && resultData.message}</div>
+    <>
+      <Header />
+      <main>
+        <div>
+          <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
+          {menuPosition && (
+            <div
+              style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
+            >
+              {charName.map((character) => (
+                <ButtonForm
+                  key={character}
+                  clickX={clickX}
+                  clickY={clickY}
+                  character={character}
+                  id={gameId}
+                  closeMenu={() => setMenuPosition(null)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <div>Result: {resultData && resultData.message}</div>
 
-      <dialog ref={dialogRef}>
-        <Form action="/leaderboard" method="post">
-          <div>
-            <label htmlFor="username">Your Name: </label>
-            <input type="text" name="username" id="username" required />
-          </div>
-          <input type="hidden" name="gameId" value={gameId} />
-          <button type="submit">Submit</button>
-        </Form>
-      </dialog>
-    </main>
+        <dialog ref={dialogRef}>
+          <Form action="/leaderboard" method="post">
+            <div>
+              <label htmlFor="username">Your Name: </label>
+              <input type="text" name="username" id="username" required />
+            </div>
+            <input type="hidden" name="gameId" value={gameId} />
+            <button type="submit">Submit</button>
+          </Form>
+        </dialog>
+      </main>
+    </>
   );
 }
 
