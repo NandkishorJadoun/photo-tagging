@@ -26,7 +26,6 @@ export function useFetchLeaderboard(): [
         return response.json();
       })
       .then((data) => {
-        console.log(data.leaderboard);
         setLeaderboard(data.leaderboard);
       })
       .catch((error) => {

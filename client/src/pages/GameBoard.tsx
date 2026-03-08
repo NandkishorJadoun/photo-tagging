@@ -65,11 +65,17 @@ function GameBoard() {
   return (
     <>
       <Header />
-      <main>
+      <main className="relative">
         <div>
-          <img src={puzzleImgSrc} onClick={handleClick} ref={imgRef} />
+          <img
+            src={puzzleImgSrc}
+            onClick={handleClick}
+            ref={imgRef}
+            className="cursor-crosshair"
+          />
           {menuPosition && (
             <div
+              className="absolute bg-neutral-700/90 text-neutral-50 border border-neutral-950"
               style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
             >
               {charName.map((character) => (
@@ -85,7 +91,12 @@ function GameBoard() {
             </div>
           )}
         </div>
-        <div>Result: {resultData && resultData.message}</div>
+        <hr className="border-b-0 border-t-neutral-600 " />
+        {resultData && (
+          <div className="text-center text-xl pt-1">
+            Result: {resultData.message}
+          </div>
+        )}
 
         <dialog ref={dialogRef}>
           <Form action="/leaderboard" method="post">
@@ -109,7 +120,9 @@ function ButtonForm({ clickX, clickY, character, id, closeMenu }: any) {
       <input type="hidden" name="clickY" value={clickY} />
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="character" value={character} />
-      <button type="submit">{character}</button>
+      <button className="px-3 py-1 cursor-pointer" type="submit">
+        {character}
+      </button>
     </Form>
   );
 }
