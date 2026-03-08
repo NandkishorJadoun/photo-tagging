@@ -1,10 +1,10 @@
 import "dotenv/config"
 import cors from "cors";
-import express, { json, urlencoded } from "express";
+import express, { json, urlencoded, type Express } from "express";
 import { prisma } from "./libs/prisma.js"
 import { isWithinTolerance } from "./utils/helpers.js";
 
-export const app = express();
+export const app: Express = express();
 
 app.use(cors());
 app.use(json());
@@ -92,6 +92,6 @@ app.post("/api/game/end", async (req, res) => {
 })
 
 app.get("/api/leaderboard", async (req, res) => {
-  const leaderboard = await prisma.leaderboardEntry.findMany({ where: {} })
+  const leaderboard = await prisma.leaderboardEntry.findMany({})
   return res.status(200).json({ message: "Get leaderboard successfully", leaderboard })
 })

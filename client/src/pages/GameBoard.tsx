@@ -98,14 +98,32 @@ function GameBoard() {
           </div>
         )}
 
-        <dialog ref={dialogRef}>
-          <Form action="/leaderboard" method="post">
+        <dialog
+          className="top-[50%] left-[50%] translate-[-50%] "
+          ref={dialogRef}
+        >
+          <Form
+            className="flex flex-col gap-4 p-4 items-center"
+            action="/leaderboard"
+            method="post"
+          >
             <div>
               <label htmlFor="username">Your Name: </label>
-              <input type="text" name="username" id="username" required />
+              <input
+                className="border"
+                type="text"
+                name="username"
+                id="username"
+                required
+              />
             </div>
             <input type="hidden" name="gameId" value={gameId} />
-            <button type="submit">Submit</button>
+            <button
+              className="border border-neutral-600 py-1 px-4"
+              type="submit"
+            >
+              Submit
+            </button>
           </Form>
         </dialog>
       </main>
