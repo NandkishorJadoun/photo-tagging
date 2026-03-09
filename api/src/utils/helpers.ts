@@ -5,3 +5,12 @@ export function isWithinTolerance(clickX: number, clickY: number, character: Cha
   const yDiff = Math.abs(clickY - character.y);
   return tolerance >= xDiff && tolerance >= yDiff;
 }
+
+export function createCharacterStatus(
+  allCharacters: Character[],
+  sessionCharacters: string[]) {
+  return allCharacters.map(character => ({
+    name: character.name,
+    found: sessionCharacters.includes(character.name)
+  }))
+}

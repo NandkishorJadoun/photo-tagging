@@ -2,7 +2,8 @@ import "dotenv/config"
 import cors from "cors";
 import express, { json, urlencoded, type Express } from "express";
 import { prisma } from "./libs/prisma.js"
-import { isWithinTolerance } from "./utils/helpers.js";
+import { isWithinTolerance, createCharacterStatus } from "./utils/helpers.js";
+
 
 export const app: Express = express();
 
@@ -10,46 +11,63 @@ app.use(cors());
 app.use(json());
 app.use(urlencoded({ extended: false }));
 
-app.post("/api/game/start", async (req, res) => {
-  const session = await prisma.gameSession.create({ data: {} });
+app.post("/api/game/start", async (_req, res) => {
+
+  const [allCharacters, createSession] = await prisma.$transaction([
+    prisma.character.findMany(),
+    prisma.gameSession.create({
+      data: {},
+    })
+  ])
+
+  const characterStatus = allCharacters.map(character => ({
+    name: character.name,
+    found: false,
+  }))
 
   res.json({
     message: "Game Started",
-    sessionId: session.id,
+    characterStatus,
+    sessionId: createSession.id,
   });
 });
 
 app.post("/api/game/play", async (req, res) => {
   const { character, clickX, clickY, id } = req.body;
 
-  const characterData = await prisma.character.findUnique({
-    where: { name: character },
-  });
+  let isGameOver = false;
 
-  if (!characterData) {
-    return res.status(404).json({ message: "Character not found" });
+  const [characterData, allCharacters, session] = await prisma.$transaction([
+    prisma.character.findUnique({ where: { name: character } }),
+    prisma.character.findMany(),
+    prisma.gameSession.findUnique({ where: { id } })
+  ])
+
+  // first check if character and session exist on the db
+  // if not then send the status 404 error message 
+
+  if (!characterData || !session) {
+    return res.status(404).json({ message: "Character or Game session not found" });
   }
+
+  // check its tolerance, if its out of tolerance then send the current character status and game over false
 
   const isFound = isWithinTolerance(clickX, clickY, characterData);
 
   if (!isFound) {
-    return res.status(200).json({ message: "Try again!" });
+    const characterStatus = createCharacterStatus(allCharacters, session.characters)
+
+    return res.status(200).json({ message: "Try again!", characterStatus, isGameOver });
   }
 
-  const [allCharacters, updatedSession] = await prisma.$transaction([
-    prisma.character.findMany(),
-    prisma.gameSession.update({
-      where: { id },
-      data: { characters: { push: character } },
-    })
-  ])
+  const updatedSession = await prisma.gameSession.update({
+    where: { id },
+    data: { characters: { push: character } },
+  })
 
-  const characterStatus = allCharacters.map((char) => ({
-    name: char.name,
-    found: updatedSession.characters.includes(char.name),
-  }));
+  const characterStatus = createCharacterStatus(allCharacters, updatedSession.characters)
 
-  const isGameOver = allCharacters.every(char =>
+  isGameOver = allCharacters.every(char =>
     updatedSession.characters.includes(char.name)
   );
 
