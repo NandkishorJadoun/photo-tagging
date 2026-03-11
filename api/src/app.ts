@@ -3,7 +3,7 @@ import cors from "cors";
 import express, { json, urlencoded, type Express } from "express";
 import { prisma } from "./libs/prisma.js"
 import { isWithinTolerance, createCharacterStatus } from "./utils/helpers.js";
-
+import type { Character, GameSession } from "../generated/prisma/index.js";
 
 export const app: Express = express();
 
@@ -18,7 +18,7 @@ app.post("/api/game/start", async (_req, res) => {
     prisma.gameSession.create({
       data: {},
     })
-  ])
+  ]) as [Character[], GameSession]
 
   const characterStatus = allCharacters.map(character => ({
     name: character.name,
@@ -41,16 +41,11 @@ app.post("/api/game/play", async (req, res) => {
     prisma.character.findUnique({ where: { name: character } }),
     prisma.character.findMany(),
     prisma.gameSession.findUnique({ where: { id } })
-  ])
-
-  // first check if character and session exist on the db
-  // if not then send the status 404 error message 
+  ]) as [Character | null, Character[], GameSession | null]
 
   if (!characterData || !session) {
     return res.status(404).json({ message: "Character or Game session not found" });
   }
-
-  // check its tolerance, if its out of tolerance then send the current character status and game over false
 
   const isFound = isWithinTolerance(clickX, clickY, characterData);
 
