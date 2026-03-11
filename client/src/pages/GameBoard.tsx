@@ -109,14 +109,17 @@ function GameBoard() {
               className="absolute bg-neutral-700/90 text-neutral-50 border border-neutral-950"
               style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
             >
-              {charName &&
-                charName.map((character) => (
-                  <PlayButton
-                    key={character}
-                    character={character}
-                    handlePlay={() => handlePlay(character)}
-                  />
-                ))}
+              {charName && (
+                <div className="flex flex-col">
+                  {charName.map((character) => (
+                    <PlayButton
+                      key={character}
+                      character={character}
+                      handlePlay={() => handlePlay(character)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

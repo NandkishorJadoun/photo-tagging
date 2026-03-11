@@ -21,7 +21,7 @@ function LeaderBoard() {
                 key={entry.id}
               >
                 <p className="text-start">{entry.userName}</p>
-                <p>{entry.duration} ms</p>
+                <p>{Math.floor(entry.duration / 1000)} seconds</p>
               </div>
             );
           })}
