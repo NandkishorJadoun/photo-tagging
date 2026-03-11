@@ -1,37 +1,52 @@
-import { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { useActionData, Form } from "react-router";
-import type { MouseEventHandler } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useLayoutEffect,
+  type MouseEventHandler,
+} from "react";
+import { Form } from "react-router";
 import puzzleImgSrc from "/pic.jpg";
-import { useGameSession } from "../hooks/useGameSession.js";
-
 import { Header } from "../components/Header.js";
-const initCharStatus = [
-  { name: "waldo", found: false },
-  { name: "odlaw", found: false },
-  { name: "wizard", found: false },
-];
+import type { MenuPosition, CharacterStatus } from "../types/index.js";
+import { PlayButton } from "../components/PlayButton.js";
 
 function GameBoard() {
-  const [gameId] = useGameSession();
-  const resultData = useActionData();
-  const [charStatus, SetCharStatus] = useState(initCharStatus);
+  const [message, setMessage] = useState(null);
+  const [characterStatus, setCharacterStatus] = useState<
+    CharacterStatus[] | null
+  >(null);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [gameId, setGameId] = useState("");
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+
   const imgRef = useRef<HTMLImageElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const [menuPosition, setMenuPosition] = useState<{
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  } | null>(null);
-
   useEffect(() => {
-    if (resultData?.characterStatus) {
-      SetCharStatus(resultData.characterStatus);
-      setIsGameOver(resultData.isGameOver);
-    }
-  }, [resultData]);
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    fetch(`${import.meta.env.VITE_API_URL}/api/game/start`, {
+      signal,
+      method: "POST",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setMessage(data.message);
+        setGameId(data.sessionId);
+        setCharacterStatus(data.characterStatus);
+      })
+      .catch((error) => {
+        if (error.name === "AbortError") {
+          return;
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (isGameOver) {
@@ -39,9 +54,9 @@ function GameBoard() {
     }
   }, [isGameOver]);
 
-  const charName = charStatus
-    .filter((char) => !char.found)
-    .map((char) => char.name);
+  const charName =
+    characterStatus &&
+    characterStatus.filter((char) => !char.found).map((char) => char.name);
 
   const handleClick: MouseEventHandler<HTMLImageElement> = (event) => {
     const rect = imgRef.current?.getBoundingClientRect();
@@ -54,6 +69,22 @@ function GameBoard() {
       w: rect.width,
       h: rect.height,
     });
+  };
+
+  const handlePlay = async (character: string) => {
+    const bodyData = JSON.stringify({ character, clickX, clickY, id: gameId });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/game/play`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bodyData,
+    });
+
+    const { message, isGameOver, characterStatus } = await res.json();
+
+    setMessage(message);
+    setIsGameOver(isGameOver);
+    setCharacterStatus(characterStatus);
+    setMenuPosition(null);
   };
 
   const clickY =
@@ -78,28 +109,21 @@ function GameBoard() {
               className="absolute bg-neutral-700/90 text-neutral-50 border border-neutral-950"
               style={{ top: menuPosition.y + 10, left: menuPosition.x + 10 }}
             >
-              {charName.map((character) => (
-                <ButtonForm
-                  key={character}
-                  clickX={clickX}
-                  clickY={clickY}
-                  character={character}
-                  id={gameId}
-                  closeMenu={() => setMenuPosition(null)}
-                />
-              ))}
+              {charName &&
+                charName.map((character) => (
+                  <PlayButton
+                    key={character}
+                    character={character}
+                    handlePlay={() => handlePlay(character)}
+                  />
+                ))}
             </div>
           )}
         </div>
         <hr className="border-b-0 border-t-neutral-600 " />
-        {resultData && (
-          <div className="text-center text-xl pt-1">
-            Result: {resultData.message}
-          </div>
-        )}
-
+        {message && <div>Result: {message}</div>}
         <dialog
-          className="top-[50%] left-[50%] translate-[-50%] "
+          className="top-[50%] left-[50%] translate-[-50%]"
           ref={dialogRef}
         >
           <Form
@@ -128,20 +152,6 @@ function GameBoard() {
         </dialog>
       </main>
     </>
-  );
-}
-
-function ButtonForm({ clickX, clickY, character, id, closeMenu }: any) {
-  return (
-    <Form onSubmit={closeMenu} action="/game" method="post">
-      <input type="hidden" name="clickX" value={clickX} />
-      <input type="hidden" name="clickY" value={clickY} />
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="character" value={character} />
-      <button className="px-3 py-1 cursor-pointer" type="submit">
-        {character}
-      </button>
-    </Form>
   );
 }
 
