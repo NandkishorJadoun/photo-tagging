@@ -109,7 +109,7 @@ app.post("/api/game/end", async (req, res) => {
   return res.json({ message: "User added in leaderboard successfully" })
 })
 
-app.get("/api/leaderboard", async (req, res) => {
-  const leaderboard = await prisma.leaderboardEntry.findMany({})
+app.get("/api/leaderboard", async (_req, res) => {
+  const leaderboard = await prisma.leaderboardEntry.findMany({ orderBy: { duration: 'asc' } })
   return res.status(200).json({ message: "Get leaderboard successfully", leaderboard })
 })
