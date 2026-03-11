@@ -23,31 +23,6 @@ function GameBoard() {
   const imgRef = useRef<HTMLImageElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    fetch(`${import.meta.env.VITE_API_URL}/api/game/start`, {
-      signal,
-      method: "POST",
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setMessage(data.message);
-        setGameId(data.sessionId);
-        setCharacterStatus(data.characterStatus);
-      })
-      .catch((error) => {
-        if (error.name === "AbortError") {
-          return;
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   useLayoutEffect(() => {
     if (isGameOver) {
       dialogRef.current?.showModal();
@@ -87,6 +62,16 @@ function GameBoard() {
     setMenuPosition(null);
   };
 
+  const startGame = async () => {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/game/start`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    setMessage(data.message);
+    setGameId(data.sessionId);
+    setCharacterStatus(data.characterStatus);
+  };
+
   const clickY =
     menuPosition && Math.round((menuPosition.y / menuPosition.h) * 100) / 100;
 
@@ -99,8 +84,11 @@ function GameBoard() {
       <main className="relative">
         <div>
           <img
-            src={puzzleImgSrc}
+            src={
+              "https://res.cloudinary.com/hbrwdfccc/image/upload/v1763249346/Where's%20Waldo/Wheres-Waldo-Space-Station-Super-High-Resolution-scaled.jpg"
+            }
             onClick={handleClick}
+            onLoad={startGame}
             ref={imgRef}
             className="cursor-crosshair"
           />
